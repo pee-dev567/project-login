@@ -11,7 +11,6 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
     * { font-family: 'Kanit', sans-serif; }
-    .glass { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
@@ -40,7 +39,7 @@
 
   <main class="max-w-7xl mx-auto p-6 space-y-8">
 
-    <!-- Admin Special Control Panel (Show only when logged in as Admin) -->
+    <!-- Admin Special Control Panel (แสดงเฉพาะเมื่อ Login ด้วยแอดมิน admin / adminin) -->
     <section id="admin-panel" class="hidden bg-slate-900/90 border border-amber-500/40 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
       <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
       
@@ -51,18 +50,19 @@
           </div>
           <div>
             <h2 class="text-lg font-bold text-amber-400">Admin Control Center (แผงควบคุมผู้ดูแลระบบ)</h2>
-            <p class="text-xs text-slate-400">จัดการสิทธิ์ผู้ใช้, บทลงโทษการละเมิดกฎ และการล้างระบบ</p>
+            <p class="text-xs text-slate-400">จัดการสิทธิ์ผู้ใช้, ลงโทษผู้ละเมิดกฎ และการล้างประวัติการใช้งาน</p>
           </div>
         </div>
         
         <div class="flex items-center gap-3">
+          <!-- ปุ่มล้างประวัติสำหรับ Admin -->
           <button onclick="resetAllHistory()" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 transition shadow-lg shadow-rose-600/20">
             <i data-lucide="rotate-ccw" class="w-4 h-4"></i> ล้างประวัติการยืม-คืนทั้งหมด
           </button>
         </div>
       </div>
 
-      <!-- User Management Table inside Admin Panel -->
+      <!-- User Management & Punishment Table inside Admin Panel -->
       <div class="space-y-3">
         <h3 class="text-sm font-semibold text-slate-300 flex items-center gap-2">
           <i data-lucide="users" class="w-4 h-4 text-cyan-400"></i> จัดการผู้ใช้งาน & บทลงโทษ (Punishment System)
@@ -201,7 +201,7 @@
       </div>
 
       <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-1">
-        <p class="font-semibold text-slate-300">🔑 รหัสผ่านสาธิต:</p>
+        <p class="font-semibold text-slate-300">🔑 บัญชีทดสอบระบบ:</p>
         <p>• <strong>Admin:</strong> admin / adminin</p>
         <p>• <strong>User ปกติ:</strong> user1 / 1234</p>
       </div>
@@ -212,50 +212,45 @@
     </div>
   </div>
 
-  <!-- JavaScript Application Core Logic -->
+  <!-- JavaScript Core Logic -->
   <script>
-    // State Application Management
-    let currentUser = null; // { name, role: 'admin' | 'user' }
+    let currentUser = null;
     let activeTab = 'score';
 
-    // Users & Punishment Data Structure
+    // โครงสร้างข้อมูลผู้ใช้งานและระบบบทลงโทษ
     let users = [
       { id: 1, name: "Somchai_A", borrowed: 14, returned: 12, unreturned: 2, isBanned: false },
       { id: 2, name: "Anan_K", borrowed: 9, returned: 9, unreturned: 0, isBanned: false },
-      { id: 3, name: "Wichai_R", borrowed: 6, returned: 2, unreturned: 4, isBanned: true },
+      { id: 3, name: "Wichai_R", borrowed: 6, returned: 2, unreturned: 4, isBanned: true }, // ถูกระงับสิทธิ์
       { id: 4, name: "user1", borrowed: 3, returned: 3, unreturned: 0, isBanned: false }
     ];
 
-    // Cabinets Data Structure
     let cabinets = [
-      { id: 1, name: "ตู้ที่ 01", item: "สว่านไฟฟ้าไร้สาย", status: "available", borrower: null, time: null, issueReported: false },
-      { id: 2, name: "ตู้ที่ 02", item: "มัลติมิเตอร์ดิจิทัล", status: "borrowed", borrower: "Somchai_A", time: "10:30 น.", issueReported: false },
-      { id: 3, name: "ตู้ที่ 03", item: "ชุดหัวแร้งบั๊กกรี", status: "available", borrower: null, time: null, issueReported: false }
+      { id: 1, name: "ตู้ที่ 01", item: "สว่านไฟฟ้าไร้สาย", status: "available", borrower: null, time: null },
+      { id: 2, name: "ตู้ที่ 02", item: "มัลติมิเตอร์ดิจิทัล", status: "borrowed", borrower: "Somchai_A", time: "10:30 น." },
+      { id: 3, name: "ตู้ที่ 03", item: "ชุดหัวแร้งบั๊กกรี", status: "available", borrower: null, time: null }
     ];
 
-    // History Log Database
     let historyLogs = [
       { id: 1, time: "10:30 น.", cabinet: "ตู้ที่ 02", user: "Somchai_A", action: "ยืมอุปกรณ์", status: "ค้างส่งคืน" },
       { id: 2, time: "09:15 น.", cabinet: "ตู้ที่ 01", user: "Anan_K", action: "คืนอุปกรณ์", status: "เรียบร้อย" },
       { id: 3, time: "08:00 น.", cabinet: "ตู้ที่ 01", user: "Anan_K", action: "ยืมอุปกรณ์", status: "เรียบร้อย" }
     ];
 
-    // Core Calculation: Score = (Returned * 1) - (Unreturned * 2)
+    // คำนวณคะแนน: คืนแล้ว +1 / ค้างคืน -2
     function calcUserScore(u) {
       return (u.returned * 1) - (u.unreturned * 2);
     }
 
-    // Initialize Toast Alerts
     function showToast(message, type = 'success') {
       const toast = document.createElement('div');
       const bgClass = type === 'error' ? 'bg-rose-900/90 border-rose-500' : (type === 'warning' ? 'bg-amber-900/90 border-amber-500' : 'bg-cyan-900/90 border-cyan-500');
-      toast.className = `px-4 py-3 rounded-xl border ${bgClass} text-slate-100 text-xs font-semibold shadow-xl flex items-center gap-2 animate-bounce`;
+      toast.className = `px-4 py-3 rounded-xl border ${bgClass} text-slate-100 text-xs font-semibold shadow-xl flex items-center gap-2`;
       toast.innerHTML = `<span>${message}</span>`;
       document.getElementById('toast-container').appendChild(toast);
       setTimeout(() => toast.remove(), 3500);
     }
 
-    // Render User Authentication Bar
     function renderUserBar() {
       const bar = document.getElementById('user-profile-bar');
       if (currentUser) {
@@ -283,11 +278,9 @@
       lucide.createIcons();
     }
 
-    // Modal Control
     function openLoginModal() { document.getElementById('login-modal').classList.remove('hidden'); }
     function closeLoginModal() { document.getElementById('login-modal').classList.add('hidden'); }
 
-    // Authentication Handlers
     function handleLogin() {
       const u = document.getElementById('login-username').value.trim();
       const p = document.getElementById('login-password').value.trim();
@@ -319,7 +312,7 @@
       updateApp();
     }
 
-    // Admin Action: Reset All History
+    // ฟังก์ชัน Admin: ล้างประวัติทั้งหมด
     function resetAllHistory() {
       if (!currentUser || currentUser.role !== 'admin') {
         showToast('สิทธิ์ไม่ถูกต้อง เฉพาะ Admin เท่านั้น', 'error');
@@ -332,30 +325,29 @@
       }
     }
 
-    // Admin Action: Toggle Ban User
+    // ฟังก์ชัน Admin: ลงโทษ / ห้ามยืม
     function toggleBanUser(userId) {
       if (!currentUser || currentUser.role !== 'admin') return;
       const u = users.find(x => x.id === userId);
       if (u) {
         u.isBanned = !u.isBanned;
-        showToast(`${u.isBanned ? 'ระงับสิทธิ์การยืม' : 'ปลดระงับสิทธิ์'} ของ ${u.name} เรียบร้อย`, u.isBanned ? 'error' : 'success');
+        showToast(`${u.isBanned ? 'สั่งห้ามยืม' : 'ปลดระงับสิทธิ์'} ของ ${u.name} เรียบร้อย`, u.isBanned ? 'error' : 'success');
         updateApp();
       }
     }
 
-    // Admin Action: Clear Punishment & Normalize Borrow Counts
+    // ฟังก์ชัน Admin: ปรับรายการค้างคืนให้เป็นปกติ
     function normalizeUser(userId) {
       if (!currentUser || currentUser.role !== 'admin') return;
       const u = users.find(x => x.id === userId);
       if (u) {
         u.isBanned = false;
-        u.unreturned = 0;
-        showToast(`ปรับรายการค้างคืนและคืนสิทธิ์ปกติให้คุณ ${u.name} แล้ว`);
+        u.unreturned = 0; // ปรับรายการค้างส่งคืนเป็น 0 ให้กลับเป็นปกติ
+        showToast(`ล้างรายการค้างคืนและคืนสิทธิ์ยืมปกติให้คุณ ${u.name} แล้ว`);
         updateApp();
       }
     }
 
-    // Cabinet Actions: Borrow / Return
     function handleCabinetAction(cabinetId) {
       if (!currentUser) {
         showToast('กรุณาเข้าสู่ระบบก่อนทำรายการยืม-คืน', 'warning');
@@ -373,7 +365,6 @@
       const nowTime = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + " น.";
 
       if (cab.status === 'available') {
-        // Perform Borrowing
         cab.status = 'borrowed';
         cab.borrower = currentUser.name;
         cab.time = nowTime;
@@ -394,7 +385,6 @@
 
         showToast(`ยืม ${cab.item} เรียบร้อยแล้ว`);
       } else {
-        // Perform Returning
         if (cab.borrower !== currentUser.name && currentUser.role !== 'admin') {
           showToast(`เฉพาะผู้ยืม (${cab.borrower}) หรือ Admin เท่านั้นที่กดคืนได้`, 'error');
           return;
@@ -426,7 +416,6 @@
       updateApp();
     }
 
-    // Render Cabinets Cards
     function renderCabinets() {
       const container = document.getElementById('cabinets-container');
       container.innerHTML = cabinets.map(c => `
@@ -454,7 +443,6 @@
       `).join('');
     }
 
-    // Switch Leaderboard Tab
     function switchTab(tab) {
       activeTab = tab;
       const tabs = ['score', 'most', 'unreturned', 'perfect'];
@@ -469,7 +457,6 @@
       renderLeaderboard();
     }
 
-    // Render Leaderboard Table
     function renderLeaderboard() {
       let sorted = [...users];
       if (activeTab === 'score') {
@@ -502,7 +489,6 @@
       }).join('');
     }
 
-    // Render Admin Management Users Table
     function renderAdminUsersTable() {
       const tbody = document.getElementById('admin-users-table');
       tbody.innerHTML = users.map(u => `
@@ -517,7 +503,7 @@
           </td>
           <td class="p-3 text-right space-x-2">
             <button onclick="toggleBanUser(${u.id})" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold transition ${u.isBanned ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-rose-600 hover:bg-rose-500 text-white'}">
-              ${u.isBanned ? 'ปลดระงับ' : 'สัญญานห้ามยืม'}
+              ${u.isBanned ? 'ปลดระงับ' : 'สั่งห้ามยืม'}
             </button>
             <button onclick="normalizeUser(${u.id})" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[11px] font-semibold transition border border-slate-700">
               ล้างสถิติค้างคืน
@@ -527,7 +513,6 @@
       `).join('');
     }
 
-    // Render History Logs
     function renderHistory() {
       document.getElementById('history-count').innerText = `${historyLogs.length} รายการ`;
       const tbody = document.getElementById('history-body');
@@ -542,7 +527,6 @@
       `).join('');
     }
 
-    // Global Application UI Refresh
     function updateApp() {
       const adminPanel = document.getElementById('admin-panel');
       if (currentUser && currentUser.role === 'admin') {
@@ -559,7 +543,6 @@
       lucide.createIcons();
     }
 
-    // Initialize Application
     document.addEventListener('DOMContentLoaded', () => {
       updateApp();
     });
